@@ -5,14 +5,32 @@ const mindMapSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    content: {
-        type: Object,
-        required: true
+    description: {
+        type: String,
+        default: ''
     },
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+    nodes: [{
+        id: String,
+        type: String,
+        data: {
+            label: String,
+            content: String
+        },
+        position: {
+            x: Number,
+            y: Number
+        }
+    }],
+    edges: [{
+        id: String,
+        source: String,
+        target: String,
+        type: String,
+        label: String
+    }],
+    lastModified: {
+        type: Date,
+        default: Date.now
     }
 }, { timestamps: true });
 
