@@ -8,8 +8,16 @@ const defaultQuestions = [
   'Hayatında değiştirmek istediğin bir alışkanlık var mı?'
 ];
 
+
 function App() {
   const [answers, setAnswers] = useState(Array(defaultQuestions.length).fill(''));
+  const [hoveredIdx, setHoveredIdx] = useState(null);
+  const [focusedIdx, setFocusedIdx] = useState(null);
+
+  // Merkez ve düğüm pozisyonları
+  const center = { x: 320, y: 220 };
+  const radius = 180;
+  const nodeSize = { w: 220, h: 80 };
 
   const handleAnswerChange = (idx, value) => {
     setAnswers((prev) => {
@@ -19,37 +27,87 @@ function App() {
     });
   };
 
+  // Düğüm pozisyonlarını hesapla
+  const nodePositions = defaultQuestions.map((_, idx) => {
+    const angle = (idx / defaultQuestions.length) * 2 * Math.PI - Math.PI / 2;
+    const x = center.x + Math.cos(angle) * radius;
+    const y = center.y + Math.sin(angle) * radius;
+    return { x, y };
+  });
+
+  // SVG çizgileri için path oluşturucu
+  const getCurvePath = (from, to) => {
+    // Kavisli bir bağlantı için kontrol noktası
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const mx = from.x + dx * 0.5;
+    const my = from.y + dy * 0.5 - 60; // Kavis miktarı
+    return `M${from.x},${from.y} Q${mx},${my} ${to.x},${to.y}`;
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-blue-100">
       <h1 className="text-4xl font-bold mb-8 text-blue-700">Zihin Haritası: Who am I?</h1>
-      <div className="relative w-full max-w-3xl h-[500px] flex items-center justify-center">
+      <div className="relative w-[640px] h-[440px] flex items-center justify-center">
+        {/* SVG bağlantı çizgileri */}
+        <svg className="absolute left-0 top-0 w-full h-full pointer-events-none" width={640} height={440}>
+          {nodePositions.map((pos, idx) => (
+            <path
+              key={idx}
+              d={getCurvePath(center, pos)}
+              stroke={hoveredIdx === idx ? '#2563eb' : '#60a5fa'}
+              strokeWidth={hoveredIdx === idx ? 4 : 2}
+              fill="none"
+              style={{ transition: 'stroke 0.2s, stroke-width 0.2s' }}
+            />
+          ))}
+        </svg>
         {/* Merkezdeki ana düğüm */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-40 h-40 flex items-center justify-center border-4 border-blue-400 z-10">
+        <div
+          className="absolute bg-white shadow-xl rounded-full border-4 border-blue-400 flex items-center justify-center z-10"
+          style={{
+            left: center.x - 70,
+            top: center.y - 70,
+            width: 140,
+            height: 140
+          }}
+        >
           <span className="text-2xl font-semibold text-blue-700">Who am I?</span>
         </div>
         {/* Sorular ve cevap alanları çevrede */}
         {defaultQuestions.map((q, idx) => {
-          const angle = (idx / defaultQuestions.length) * 2 * Math.PI;
-          const radius = 180;
-          const x = Math.cos(angle) * radius;
-          const y = Math.sin(angle) * radius;
+          const pos = nodePositions[idx];
+          const isHovered = hoveredIdx === idx;
+          const isFocused = focusedIdx === idx;
           return (
             <div
               key={idx}
-              className="absolute w-64 p-4 bg-white rounded-xl shadow-md border border-blue-200"
+              className={`absolute flex flex-col items-center justify-center transition-all duration-200 select-none`}
               style={{
-                left: `calc(50% + ${x}px - 128px)`,
-                top: `calc(50% + ${y}px - 48px)`
+                left: pos.x - nodeSize.w / 2,
+                top: pos.y - nodeSize.h / 2,
+                width: nodeSize.w,
+                height: nodeSize.h
               }}
+              onMouseEnter={() => setHoveredIdx(idx)}
+              onMouseLeave={() => setHoveredIdx(null)}
             >
-              <div className="font-medium text-blue-600 mb-2">{q}</div>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                value={answers[idx]}
-                onChange={e => handleAnswerChange(idx, e.target.value)}
-                placeholder="Cevabınızı yazın..."
-              />
+              <div
+                className={`w-full h-full flex flex-col items-center justify-center bg-white ${isHovered ? 'shadow-2xl border-blue-400' : 'shadow-lg border-blue-200'} ${isFocused ? 'ring-4 ring-blue-400' : ''} border-2 rounded-full transition-all duration-200`}
+              >
+                <div className="font-medium text-blue-600 mb-1 text-center px-2 text-sm">
+                  {q}
+                </div>
+                <input
+                  type="text"
+                  className={`w-11/12 mt-1 px-2 py-1 rounded-full border-2 focus:outline-none transition-all duration-200 ${isFocused ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-300'} text-center text-gray-800 bg-blue-50 focus:bg-white`}
+                  value={answers[idx]}
+                  onChange={e => handleAnswerChange(idx, e.target.value)}
+                  onFocus={() => setFocusedIdx(idx)}
+                  onBlur={() => setFocusedIdx(null)}
+                  placeholder="Cevabınızı yazın..."
+                />
+              </div>
             </div>
           );
         })}
@@ -69,4 +127,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
