@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const defaultQuestions = [
+const questions = [
   'En çok gurur duyduğun özelliğin nedir?',
   'Hayattaki en büyük hedefin nedir?',
   'Seni en mutlu eden şey nedir?',
@@ -8,123 +9,190 @@ const defaultQuestions = [
   'Hayatında değiştirmek istediğin bir alışkanlık var mı?'
 ];
 
+export default function App() {
+  const [isStarted, setIsStarted] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState(Array(questions.length).fill(''));
 
-function App() {
-  const [answers, setAnswers] = useState(Array(defaultQuestions.length).fill(''));
-  const [hoveredIdx, setHoveredIdx] = useState(null);
-  const [focusedIdx, setFocusedIdx] = useState(null);
-
-  // Merkez ve düğüm pozisyonları
-  const center = { x: 320, y: 220 };
-  const radius = 180;
-  const nodeSize = { w: 220, h: 80 };
-
-  const handleAnswerChange = (idx, value) => {
-    setAnswers((prev) => {
-      const copy = [...prev];
-      copy[idx] = value;
-      return copy;
-    });
-  };
-
-  // Düğüm pozisyonlarını hesapla
-  const nodePositions = defaultQuestions.map((_, idx) => {
-    const angle = (idx / defaultQuestions.length) * 2 * Math.PI - Math.PI / 2;
-    const x = center.x + Math.cos(angle) * radius;
-    const y = center.y + Math.sin(angle) * radius;
-    return { x, y };
-  });
-
-  // SVG çizgileri için path oluşturucu
-  const getCurvePath = (from, to) => {
-    // Kavisli bir bağlantı için kontrol noktası
-    const dx = to.x - from.x;
-    const dy = to.y - from.y;
-    const mx = from.x + dx * 0.5;
-    const my = from.y + dy * 0.5 - 60; // Kavis miktarı
-    return `M${from.x},${from.y} Q${mx},${my} ${to.x},${to.y}`;
+  const handleStartOver = () => {
+    setIsStarted(false);
+    setCurrentQuestion(0);
+    setAnswers(Array(questions.length).fill(''));
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-blue-100">
-      <h1 className="text-4xl font-bold mb-8 text-blue-700">Zihin Haritası: Who am I?</h1>
-      <div className="relative w-[640px] h-[440px] flex items-center justify-center">
-        {/* SVG bağlantı çizgileri */}
-        <svg className="absolute left-0 top-0 w-full h-full pointer-events-none" width={640} height={440}>
-          {nodePositions.map((pos, idx) => (
-            <path
-              key={idx}
-              d={getCurvePath(center, pos)}
-              stroke={hoveredIdx === idx ? '#2563eb' : '#60a5fa'}
-              strokeWidth={hoveredIdx === idx ? 4 : 2}
-              fill="none"
-              style={{ transition: 'stroke 0.2s, stroke-width 0.2s' }}
-            />
-          ))}
-        </svg>
-        {/* Merkezdeki ana düğüm */}
-        <div
-          className="absolute bg-white shadow-xl rounded-full border-4 border-blue-400 flex items-center justify-center z-10"
-          style={{
-            left: center.x - 70,
-            top: center.y - 70,
-            width: 140,
-            height: 140
-          }}
-        >
-          <span className="text-2xl font-semibold text-blue-700">Who am I?</span>
-        </div>
-        {/* Sorular ve cevap alanları çevrede */}
-        {defaultQuestions.map((q, idx) => {
-          const pos = nodePositions[idx];
-          const isHovered = hoveredIdx === idx;
-          const isFocused = focusedIdx === idx;
-          return (
-            <div
-              key={idx}
-              className={`absolute flex flex-col items-center justify-center transition-all duration-200 select-none`}
-              style={{
-                left: pos.x - nodeSize.w / 2,
-                top: pos.y - nodeSize.h / 2,
-                width: nodeSize.w,
-                height: nodeSize.h
-              }}
-              onMouseEnter={() => setHoveredIdx(idx)}
-              onMouseLeave={() => setHoveredIdx(null)}
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[radial-gradient(80%_60%_at_50%_-20%,#8ab4ff33,transparent),radial-gradient(60%_40%_at_90%_10%,#b388ff33,transparent),radial-gradient(50%_40%_at_10%_30%,#60a5fa33,transparent)]">
+      {/* Main gradient backdrop */}
+      <div className="absolute inset-0 -z-20 bg-gradient-to-br from-indigo-700 via-blue-600 to-fuchsia-700" />
+
+      {/* Soft vignette */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_50%_30%,#ffffff10,transparent)]" />
+
+      {/* Floating glass blobs */}
+      <motion.div
+        className="absolute -top-24 -left-20 h-72 w-72 rounded-[3rem] bg-white/10 backdrop-blur-2xl shadow-2xl ring-1 ring-white/20"
+        initial={{ opacity: 0, y: -30, rotate: -8 }}
+        animate={{ opacity: 1, y: 0, rotate: 0 }}
+        transition={{ duration: 1.2 }}
+      />
+      <motion.div
+        className="absolute bottom-[-4rem] right-[-4rem] h-96 w-96 rounded-[4rem] bg-white/10 backdrop-blur-2xl shadow-2xl ring-1 ring-white/20"
+        initial={{ opacity: 0, y: 30, rotate: 8 }}
+        animate={{ opacity: 1, y: 0, rotate: 0 }}
+        transition={{ duration: 1.2, delay: 0.15 }}
+      />
+      <motion.div
+        className="absolute top-1/4 right-1/4 h-40 w-40 rounded-3xl bg-white/10 backdrop-blur-xl shadow-xl ring-1 ring-white/20"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1, delay: 0.25 }}
+      />
+
+      {/* Content */}
+      <main className="relative z-10 flex flex-col items-center justify-center w-full min-h-screen p-6">
+        <AnimatePresence mode="wait">
+          {!isStarted ? (
+            <motion.div
+              key="welcome"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex flex-col items-center justify-center w-full max-w-3xl text-center"
+
             >
-              <div
-                className={`w-full h-full flex flex-col items-center justify-center bg-white ${isHovered ? 'shadow-2xl border-blue-400' : 'shadow-lg border-blue-200'} ${isFocused ? 'ring-4 ring-blue-400' : ''} border-2 rounded-full transition-all duration-200`}
+              {/* Glassy header container */}
+              <motion.div
+                className="mx-auto mb-10 w-full rounded-3xl bg-white/10 p-8 backdrop-blur-xl ring-1 ring-white/20 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]"
               >
-                <div className="font-medium text-blue-600 mb-1 text-center px-2 text-sm">
-                  {q}
+                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-blue-100 to-violet-200 drop-shadow-sm">
+                  Who am I ?
+                </h1>
+                <p className="mt-4 text-base md:text-lg text-blue-50/90">
+                  Kendinizi keşfetmek için modern, camsı bir arayüz.
+                </p>
+              </motion.div>
+
+              {/* Start button */}
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsStarted(true)}
+                className="group relative flex items-center justify-center rounded-2xl px-10 py-5 text-lg md:text-xl font-semibold text-white/95"
+
+              >
+                <span className="absolute inset-0 rounded-2xl bg-white/10 backdrop-blur-2xl ring-1 ring-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_10px_30px_-10px_rgba(0,0,0,0.6)]" />
+                <span className="absolute -inset-px rounded-2xl bg-gradient-to-r from-indigo-400/30 via-blue-400/30 to-fuchsia-400/30 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
+                <span className="relative">Discover Your Self</span>
+
+              </motion.button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="questions"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="w-full max-w-3xl"
+            >
+              <div className="w-full rounded-3xl bg-white/10 p-8 backdrop-blur-xl ring-1 ring-white/20 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]">
+                <div className="mb-8 text-center">
+                  <h2 className="text-2xl font-semibold text-white/90 mb-2">
+                    Soru {currentQuestion + 1}/{questions.length}
+                  </h2>
+                  <p className="text-xl text-white mb-6">
+                    {questions[currentQuestion]}
+                  </p>
+                  <textarea
+                    value={answers[currentQuestion]}
+                    onChange={(e) => {
+                      const newAnswers = [...answers];
+                      newAnswers[currentQuestion] = e.target.value;
+                      setAnswers(newAnswers);
+                    }}
+                    className="w-full h-32 p-4 rounded-xl bg-white/10 backdrop-blur-sm
+                             border border-white/20 text-white placeholder-white/40
+                             focus:outline-none focus:ring-2 focus:ring-white/30
+                             resize-none shadow-inner text-center"
+                    placeholder="Cevabınızı buraya yazın..."
+                  />
                 </div>
-                <input
-                  type="text"
-                  className={`w-11/12 mt-1 px-2 py-1 rounded-full border-2 focus:outline-none transition-all duration-200 ${isFocused ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-300'} text-center text-gray-800 bg-blue-50 focus:bg-white`}
-                  value={answers[idx]}
-                  onChange={e => handleAnswerChange(idx, e.target.value)}
-                  onFocus={() => setFocusedIdx(idx)}
-                  onBlur={() => setFocusedIdx(null)}
-                  placeholder="Cevabınızı yazın..."
-                />
+
+                <div className="flex justify-center gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleStartOver}
+                    className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20
+                             text-white/90 hover:text-white backdrop-blur-sm
+                             border border-white/20 transition-all duration-200"
+                  >
+                    Baştan Başla
+                  </motion.button>
+
+                  {currentQuestion < questions.length - 1 ? (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setCurrentQuestion(prev => prev + 1)}
+                      className="px-6 py-3 rounded-xl bg-white/20 hover:bg-white/30
+                               text-white font-medium backdrop-blur-sm
+                               border border-white/20 transition-all duration-200"
+                    >
+                      Sonraki Soru
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setCurrentQuestion(0)}
+                      className="px-6 py-3 rounded-xl bg-white/20 hover:bg-white/30
+                               text-white font-medium backdrop-blur-sm
+                               border border-white/20 transition-all duration-200"
+                    >
+                      Cevapları Gözden Geçir
+                    </motion.button>
+                  )}
+                </div>
+
+                {currentQuestion === questions.length - 1 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-8 p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20"
+                  >
+                    <h3 className="text-xl font-semibold text-white mb-4">
+                      Tüm Cevaplarınız
+                    </h3>
+                    <div className="space-y-4">
+                      {questions.map((question, idx) => (
+                        <div key={idx} className="border-b border-white/10 last:border-0 pb-4">
+                          <p className="text-white/80 mb-2">{question}</p>
+                          <p className="text-white">
+                            {answers[idx] || <span className="italic text-white/50">Henüz cevaplanmadı</span>}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
               </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-10 w-full max-w-2xl">
-        <h2 className="text-xl font-semibold mb-4 text-gray-700">Cevaplarınız</h2>
-        <ul className="space-y-2">
-          {defaultQuestions.map((q, idx) => (
-            <li key={idx} className="bg-white rounded-lg shadow p-3">
-              <span className="font-medium text-blue-600">{q}</span>
-              <div className="mt-1 text-gray-800">{answers[idx] || <span className="italic text-gray-400">(Henüz cevaplanmadı)</span>}</div>
-            </li>
-          ))}
-        </ul>
-      </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      {/* Decorative dotted grid overlay */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 opacity-30"
+        style={{
+          backgroundImage:
+            "radial-gradient(currentColor 1px, transparent 1px), radial-gradient(currentColor 1px, transparent 1px)",
+          backgroundPosition: "0 0, 25px 25px",
+          backgroundSize: "50px 50px",
+          color: "rgba(255,255,255,0.08)",
+        }}
+      />
     </div>
   );
 }
-
-export default App;

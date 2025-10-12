@@ -1,42 +1,87 @@
+/* Genel düzen: gradient + glass efektleri */
+
+:root {
+  --primary: #7c3aed; /* mor */
+  --secondary: #3b82f6; /* mavi */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --text-light: #f0f0ff;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: var(--text-light);
+  overflow: hidden;
+}
+
+/* Ortalanmış ana kapsayıcı */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  min-height: 100vh;
+  backdrop-filter: blur(40px);
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Camsı (glassmorphism) kart */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 1.5rem;
+  padding: 2.5rem 3rem;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Başlık */
+h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(to right, #ffffff, #a5b4fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Buton */
+button {
+  background: linear-gradient(90deg, var(--secondary), var(--primary));
+  border: none;
+  color: white;
+  padding: 1rem 2.5rem;
+  border-radius: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
-.card {
-  padding: 2em;
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.35);
 }
 
-.read-the-docs {
-  color: #888;
+/* Input ve textarea stilleri */
+textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  color: #fff;
+  padding: 1rem;
+  resize: none;
+  font-size: 1rem;
+  backdrop-filter: blur(10px);
+}
+
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }
