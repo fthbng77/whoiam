@@ -4,6 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const mapRoutes = require('./routes/mapRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use((err, req, res, next) => {
 
 // Routes
 app.use('/api/mindmaps', mapRoutes);
+app.use('/api/chat', chatRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI)
