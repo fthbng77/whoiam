@@ -66,9 +66,10 @@ export default function ChatBot({ mindMapId = null }) {
         } catch (error) {
             console.error('Failed to send message:', error);
             // Hata mesajı ekle
+            const serverDetail = error?.response?.data?.details || error?.response?.data?.error || error.message;
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: 'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.',
+                content: serverDetail ? `Üzgünüm, bir hata oluştu: ${serverDetail}` : 'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.',
                 timestamp: new Date()
             }]);
         } finally {
@@ -85,12 +86,11 @@ export default function ChatBot({ mindMapId = null }) {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
                 {messages.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="text-center">
                             <p className="text-gray-400 text-lg">Hoş geldiniz! 👋</p>
-                            <p className="text-gray-500 text-sm mt-2">Mind map oluşturma konusunda size yardımcı olmak için buradayım</p>
                         </div>
                     </div>
                 ) : (
@@ -131,25 +131,30 @@ export default function ChatBot({ mindMapId = null }) {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div className="bg-gray-800 border-t border-gray-700 p-4">
-                <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Sorunuzu yazın..."
-                        disabled={loading}
-                        className="flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500 disabled:opacity-50"
-                    />
-                    <button
-                        type="submit"
-                        disabled={loading || !input.trim()}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                    >
-                        <Send size={18} />
-                    </button>
-                </form>
+            {/* Input Area (fixed footer with gradient) */}
+            <div className="fixed bottom-0 left-0 w-full z-50 backdrop-blur-sm bg-gradient-to-r from-purple-900/40 to-blue-900/40 border-t border-white/10 px-4 py-4">
+                <div className="w-full flex items-center justify-center">
+                    <form onSubmit={handleSendMessage} className="flex items-center gap-7 w-full max-w-4xl">
+                        {/* Input Field - Pill shaped */}
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Sorunuzu yazın..."
+                            disabled={loading}
+                            className="flex-1 appearance-none bg-gradient-to-r from-purple-600/10 to-blue-600/10 text-white placeholder-white/50 px-5 py-3 rounded-full border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-70 transition-all disabled:opacity-60 hover:bg-gradient-to-r hover:from-purple-600/15 hover:to-blue-600/15"
+                        />
+                        {/* Send Button - Circular */}
+                        <button
+                            type="submit"
+                            disabled={loading || !input.trim()}
+                            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:brightness-110 disabled:opacity-50 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg transition-all"
+                            aria-label="Send"
+                        >
+                            <Send size={20} />
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     );

@@ -81,14 +81,35 @@ async function generateResponse(userMessage, conversationId, mindMapId) {
         }
 
         const data = await response.json();
-        
-        if (!data.response) {
-            console.error('Invalid response from Ollama:', data);
+
+        // Ollama / local model API may return different shapes depending on version.
+        // Try several common fields to extract the assistant text.
+        let aiText = '';
+
+        if (typeof data === 'string') {
+            aiText = data;
+        } else if (data.response && typeof data.response === 'string') {
+            aiText = data.response;
+        } else if (data.output && typeof data.output === 'string') {
+            aiText = data.output;
+        } else if (data.results && Array.isArray(data.results) && data.results[0]) {
+            // e.g. { results: [ { content: '...' } ] }
+            aiText = data.results[0].content || data.results[0].text || '';
+        } else if (data.outputs && Array.isArray(data.outputs) && data.outputs[0]) {
+            aiText = data.outputs[0].content || data.outputs[0].text || '';
+        } else if (data.choices && Array.isArray(data.choices) && data.choices[0]) {
+            // OpenAI-like shape
+            const ch = data.choices[0];
+            aiText = ch.message?.content || ch.text || '';
+        }
+
+        if (!aiText) {
+            console.error('Invalid response from Ollama / model API:', data);
             throw new Error('Empty response from model');
         }
-        
+
         console.log('Ollama yanıtı alındı');
-        return data.response.trim();
+        return String(aiText).trim();
 
     } catch (error) {
         console.error('Generation error:', error.message);
