@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import ChatBot from "./components/Chat/ChatBot";
+import { MessageCircle, Home } from "lucide-react";
 
 const questions = [
   "En çok gurur duyduğun özelliğin nedir?",
@@ -13,6 +15,7 @@ export default function App() {
   const [isStarted, setIsStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState(Array(questions.length).fill(""));
+  const [page, setPage] = useState("home"); // "home" veya "chat"
 
   const handleStartOver = () => {
     setIsStarted(false);
@@ -23,9 +26,55 @@ export default function App() {
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden 
     bg-gradient-to-br from-[#4f46e5] via-[#7c3aed] to-[#8b5cf6]">      
-      <main className="relative z-10 flex flex-col items-center justify-center w-full h-screen p-6">
+      {/* Navigation Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-md border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-white">WhoIAm</h1>
+          <div className="flex gap-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setPage("home")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                page === "home"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white/10 text-white/70 hover:text-white"
+              }`}
+            >
+              <Home size={20} />
+              <span className="hidden sm:inline">Home</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setPage("chat")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                page === "chat"
+                  ? "bg-purple-600 text-white"
+                  : "bg-white/10 text-white/70 hover:text-white"
+              }`}
+            >
+              <MessageCircle size={20} />
+              <span className="hidden sm:inline">ChatBot</span>
+            </motion.button>
+          </div>
+        </div>
+      </div>
+
+      {/* Page Content */}
+      <main className="relative z-10 flex flex-col items-center justify-center w-full h-screen p-6 pt-20">
         <AnimatePresence mode="wait">
-          {!isStarted ? (
+          {page === "chat" ? (
+            <motion.div
+              key="chat"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="w-full h-full"
+            >
+              <ChatBot />
+            </motion.div>
+          ) : !isStarted ? (
             <motion.div
               key="welcome"
               initial={{ opacity: 0, y: 20 }}

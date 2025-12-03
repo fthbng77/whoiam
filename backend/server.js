@@ -22,10 +22,14 @@ app.use((err, req, res, next) => {
 app.use('/api/mindmaps', mapRoutes);
 app.use('/api/chat', chatRoutes);
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('Could not connect to MongoDB:', err));
+// MongoDB connection (optional - works without it for now)
+if (process.env.MONGODB_URI) {
+    mongoose.connect(process.env.MONGODB_URI)
+        .then(() => console.log('Connected to MongoDB'))
+        .catch(err => console.error('Could not connect to MongoDB:', err));
+} else {
+    console.log('MongoDB URI not configured - running without database');
+}
 
 // Basic route for API health check
 app.get('/api/health', (req, res) => {

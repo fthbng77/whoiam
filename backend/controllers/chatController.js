@@ -23,31 +23,13 @@ exports.sendMessage = async (req, res) => {
             return res.status(400).json({ error: 'Message and conversationId are required' });
         }
 
-        // Kullanıcı mesajını kaydedin
-        const userMessage = new ChatMessage({
-            conversationId,
-            role: 'user',
-            content: message,
-            mindMapId: mindMapId || null
-        });
-        await userMessage.save();
-
         // Lokal modelden yanıt alın
         let aiResponse = await generateResponse(message, conversationId, mindMapId);
 
-        // AI yanıtını kaydedin
-        const assistantMessage = new ChatMessage({
-            conversationId,
-            role: 'assistant',
-            content: aiResponse,
-            mindMapId: mindMapId || null
-        });
-        await assistantMessage.save();
-
+        // Başarılı yanıt dönün
         res.json({
             success: true,
-            response: aiResponse,
-            message: assistantMessage
+            response: aiResponse
         });
     } catch (error) {
         console.error('Chat error:', error);
@@ -59,12 +41,8 @@ exports.sendMessage = async (req, res) => {
 exports.getConversation = async (req, res) => {
     try {
         const { conversationId } = req.params;
-
-        const messages = await ChatMessage.find({ conversationId })
-            .sort({ timestamp: 1 })
-            .limit(100);
-
-        res.json({ success: true, messages });
+        // MongoDB olmadan boş array dön
+        res.json({ success: true, messages: [] });
     } catch (error) {
         console.error('Fetch error:', error);
         res.status(500).json({ error: 'Failed to fetch messages' });
@@ -74,28 +52,46 @@ exports.getConversation = async (req, res) => {
 // Lokal modelden yanıt oluştur
 async function generateResponse(userMessage, conversationId, mindMapId) {
     try {
-        // SEÇENEK 1: Ollama kullanarak (önerilen)
-        // Eğer Ollama kurulu ise, buna bağlanın
+        console.log('Ollama API\'ye istek gönderiliyor...');
+        
+        // Ollama API'ye istek gönder
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 saniye timeout
+        
         const response = await fetch('http://localhost:11434/api/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'mistral', // veya neural-chat, phi, etc.
+                model: 'neural-chat',
                 prompt: userMessage,
-                stream: false
-            })
+                stream: false,
+                temperature: 0.7,
+                top_k: 40,
+                top_p: 0.9,
+                num_predict: 256
+            }),
+            signal: controller.signal
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            return data.response;
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            console.error('Ollama API error:', response.status, response.statusText);
+            throw new Error(`HTTP Error: ${response.status}`);
         }
 
-        // SEÇENEK 2: Fallback - simple template-based response
-        return generateTemplateResponse(userMessage);
+        const data = await response.json();
+        
+        if (!data.response) {
+            console.error('Invalid response from Ollama:', data);
+            throw new Error('Empty response from model');
+        }
+        
+        console.log('Ollama yanıtı alındı');
+        return data.response.trim();
 
     } catch (error) {
-        console.error('Generation error:', error);
+        console.error('Generation error:', error.message);
         return generateTemplateResponse(userMessage);
     }
 }
